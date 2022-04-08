@@ -10,6 +10,7 @@ def show_image(image):
     plt.show()
 
 def patch_Keypoint_pickiling(self):
+    # See https://stackoverflow.com/questions/10045363/pickling-cv2-keypoint-causes-picklingerror/11985056#11985056
     # Create the bundling between class and arguments to save for Keypoint class
     # See : https://stackoverflow.com/questions/50337569/pickle-exception-for-cv2-boost-when-using-multiprocessing/50394788#50394788
     def _pickle_keypoint(keypoint): #  : cv2.KeyPoint
