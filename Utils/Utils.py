@@ -1,11 +1,33 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import copyreg
 
+#OpenCV methods
 def show_image(image):
     plt.axis("off")
     plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
     plt.show()
+
+def patch_Keypoint_pickiling(self):
+    # Create the bundling between class and arguments to save for Keypoint class
+    # See : https://stackoverflow.com/questions/50337569/pickle-exception-for-cv2-boost-when-using-multiprocessing/50394788#50394788
+    def _pickle_keypoint(keypoint): #  : cv2.KeyPoint
+        return cv2.KeyPoint, (
+            keypoint.pt[0],
+            keypoint.pt[1],
+            keypoint.size,
+            keypoint.angle,
+            keypoint.response,
+            keypoint.octave,
+            keypoint.class_id,
+        )
+    # C++ Constructor, notice order of arguments : 
+    # KeyPoint (float x, float y, float _size, float _angle=-1, float _response=0, int _octave=0, int _class_id=-1)
+
+    # Apply the bundling to pickle
+    copyreg.pickle(cv2.KeyPoint().__class__, _pickle_keypoint)
+
 
 
 # This function return the X,Y,Z world coordinate point from a 
