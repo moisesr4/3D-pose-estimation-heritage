@@ -42,7 +42,7 @@ print("Generating SIFT descriptors")
 (pts_2d, pts_3d) = get_2dpts_and_3dpts_from_kps(kps, depth_image)
 
 Utils.patch_Keypoint_pickiling(kps)
-with open('TrainingRecognitionPoints/TrainingResults/3DDescriptorsPoints/SIFT/Training3DSiftDescriptors.pickle', 'wb') as handle:
+with open('TrainingRecognitionPoints/TrainingResults/Training3DSiftDescriptors.pickle', 'wb') as handle:
     pickle.dump((kps, descs, pts_2d, pts_3d), handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 #Generating and storing Surf descriptors points
@@ -51,7 +51,7 @@ print("Generating Surf descriptors")
 (pts_2d, pts_3d) = get_2dpts_and_3dpts_from_kps(kps, depth_image)
 
 Utils.patch_Keypoint_pickiling(kps)
-with open('TrainingResults/3DDescriptorsPoints/Surf/Training3DSurfDescriptors.pickle', 'wb') as handle:
+with open('TrainingRecognitionPoints/TrainingResults/Training3DSurfDescriptors.pickle', 'wb') as handle:
     pickle.dump((kps, descs, pts_2d, pts_3d), handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 #with open('filename.pickle', 'rb') as handle:
