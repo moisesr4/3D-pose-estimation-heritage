@@ -53,6 +53,3 @@ print("Generating Surf descriptors")
 Utils.patch_Keypoint_pickiling(kps)
 with open('TrainingRecognitionPoints/TrainingResults/Training3DSurfDescriptors.pickle', 'wb') as handle:
     pickle.dump((kps, descs, pts_2d, pts_3d), handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-#with open('filename.pickle', 'rb') as handle:
-#    b = pickle.load(handle)

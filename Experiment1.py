@@ -8,9 +8,17 @@
 #4) SURF REPnP
 
 import cv2
+import pickle
 
-#Loading training images
+
 
 detector = cv2.FeatureDetector_create("SIFT")
 
+
+#Loading training data
+with open('TrainingRecognitionPoints/TrainingResults/Training3DSiftDescriptors.pickle', 'rb') as handle:
+    training_3D_sift_descriptors = pickle.load(handle)
+
+with open('TrainingRecognitionPoints/TrainingResults/Training3DSurfDescriptors.pickle', 'rb') as handle:
+    training_3D_surf_descriptors = pickle.load(handle)
 
