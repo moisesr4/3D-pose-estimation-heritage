@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class TrainingCameraParameters():
+class TrainingCameraParameters:
 
     CameraModel = "Blender virtual camera"
 
@@ -18,7 +18,7 @@ class TrainingCameraParameters():
                          [-0.8935,    0.4308,     0.1268,    22.8607]])
 
 
-class TestCameraParameters():
+class TestCameraParameters:
 
     Virtual_cameras_intrinsic_parameters = np.array([[1452.5000,    0.0000, 664.0000],
                                                      [0.0000, 1452.5000, 373.5000],

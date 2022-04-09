@@ -1,6 +1,6 @@
 import numpy as np
 
-class Control_Points():
+class Control_Points:
 
     Control_Points_3D = np.array([[0.32542,   -3.27124,   -0.12009],
                                  [0.28908,   -3.40460,    1.90793],
