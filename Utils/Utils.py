@@ -50,3 +50,9 @@ def from_xyzdepth_to_xyzworld(pixel_coordinates, zdepth, K, RT):
     world_3d_point = RTinv @ np.hstack([normalized_depth-T,1])
 
     return world_3d_point
+
+
+def project_3d_point_to_2d_pixel(Point3D, K, RT):
+    Point2D = K @ RT @ np.append(Point3D,1)
+    nPoint2D = Point2D/Point2D[2]
+    return nPoint2D[0:2]
