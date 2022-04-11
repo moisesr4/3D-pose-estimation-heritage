@@ -6,22 +6,6 @@ import Utils
 import CamerasProperties
 import pickle
 
-def generate_sift_training_descriptors(gray_img):
-    sift = cv2.xfeatures2d.SIFT_create()
-    (kps, descs) = sift.detectAndCompute(gray_img, None)
-    return (kps, descs)
-
-def generate_surf_training_descriptors(gray_img):
-    surf = cv2.xfeatures2d.SURF_create()
-    (kps, descs) = surf.detectAndCompute(gray_img, None)
-    return (kps, descs)
-
-def get_2dpts_and_3dpts_from_kps(kps, depth_image):
-    pts_2d = [kps[i].pt for i in range(len(kps))]
-    z_depths = [depth_image[round(pts_2d[i][1])][round(pts_2d[i][0])] for i in range(len(pts_2d))]
-    pts_3d = [Utils.from_xyzdepth_to_xyzworld(pts_2d[i], z_depths[i], K, RT) for i in range(len(pts_2d))]
-    return (pts_2d, pts_3d)
-
 #Loading training image
 image = cv2.imread("../ImagesDataSet/SyntheticTrainImage/VirtualImTrain.png")
 #We keep the original image size for training image (1494x2656 px). We prefeer larger images for training.
@@ -38,8 +22,8 @@ RT = TrainingCameraParameters.RT_Matrix
 
 #Generating and storing SIFT descriptors points
 print("Generating SIFT descriptors")
-(kps, descs) = generate_sift_training_descriptors(train_image)
-(pts_2d, pts_3d) = get_2dpts_and_3dpts_from_kps(kps, depth_image)
+(kps, descs) = Utils.generate_sift_training_descriptors(train_image)
+(pts_2d, pts_3d) = Utils.get_2dpts_and_3dpts_from_kps(kps, depth_image, K, RT)
 
 Utils.patch_Keypoint_pickiling(kps)
 with open('TrainingRecognitionPoints/TrainingResults/Training3DSiftDescriptors.pickle', 'wb') as handle:
@@ -47,8 +31,8 @@ with open('TrainingRecognitionPoints/TrainingResults/Training3DSiftDescriptors.p
 
 #Generating and storing Surf descriptors points
 print("Generating Surf descriptors")
-(kps, descs) = generate_surf_training_descriptors(train_image)
-(pts_2d, pts_3d) = get_2dpts_and_3dpts_from_kps(kps, depth_image)
+(kps, descs) = Utils.generate_surf_training_descriptors(train_image)
+(pts_2d, pts_3d) = Utils.get_2dpts_and_3dpts_from_kps(kps, depth_image, K, RT)
 
 Utils.patch_Keypoint_pickiling(kps)
 with open('TrainingRecognitionPoints/TrainingResults/Training3DSurfDescriptors.pickle', 'wb') as handle:
