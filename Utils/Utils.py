@@ -2,8 +2,26 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import copyreg
+import csv
 
 #OpenCV methods
+def get_Tranlation_error(Tref,T):
+    return np.linalg.norm(Tref - T)
+
+def get_Rotational_error(Rref, R):
+    error_mat = Rref @ R.T * -1
+    diff_rotation_vector = np.zeros(shape=3)
+    cv2.Rodrigues(error_mat, diff_rotation_vector)
+    return np.linalg.norm(diff_rotation_vector)
+
+def get_Reprojection_error(Kref, RTref, K, RT, CtrPts3D):
+    Points2Dref = [project_3d_point_to_2d_pixel(CtrPts3D[i], Kref, RTref) for i in range(len(CtrPts3D))]
+    Points2D = [project_3d_point_to_2d_pixel(CtrPts3D[i], K, RT) for i in range(len(CtrPts3D))]
+    diff_Points2d = np.subtract(Points2Dref, Points2D)
+    norm_diff_Points2d = [np.linalg.norm(diff_Points2d[i]) for i in range(len(diff_Points2d))]
+    return max(norm_diff_Points2d)
+
+
 def show_image(image):
     plt.axis("off")
     plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
@@ -142,3 +160,9 @@ def rotation_matrix_from_vectors(vec1, vec2):
     kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
     rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
     return rotation_matrix
+
+def write_dictionary_to_csv(path_to_write, dict):
+    with open(path_to_write, 'w') as f:
+        w = csv.DictWriter(f, dict.keys())
+        w.writeheader()
+        w.writerow(dict)
