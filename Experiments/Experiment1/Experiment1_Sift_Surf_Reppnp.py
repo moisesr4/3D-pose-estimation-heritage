@@ -11,6 +11,7 @@ import numpy as np
 import REPPnPMatlab
 import matlab.engine
 import pandas as pd
+import time 
 
 with open(os.path.join(root_dir, 'TrainingRecognitionPoints/TrainingResults/Training3DSiftDescriptors.pickle'), 'rb') as handle:
     training_3D_sift_descriptors = pickle.load(handle)
@@ -38,14 +39,11 @@ Control3DPoints = ControlPoints.Control_Points.Control_Points_3D[:12]
 sift = cv2.xfeatures2d.SIFT_create()
 surf = cv2.xfeatures2d.SURF_create()
 
-# #FLANN matching
-# FLANN_INDEX_KDTREE = 1
-# index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-# search_params = dict(checks=50)   # or pass empty dictionary
-# flann = cv2.FlannBasedMatcher(index_params,search_params)
-
-#BF matching
-bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=True)
+#FLANN matching
+FLANN_INDEX_KDTREE = 1
+index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+search_params = dict(checks=50)   # or pass empty dictionary
+flann = cv2.FlannBasedMatcher(index_params,search_params)
 
 #Loading test images
 test_images_dir = os.path.join(root_dir, "ImagesDataSet/SyntheticTestImages")
@@ -63,11 +61,13 @@ T_error_results_sift_reppnp = {}
 R_error_results_sift_reppnp = {}
 Reproj_error_results_sift_reppnp = {}
 NumberOutliers_results_sift_reppnp = {}
+ProcTime_results_sift_reppnp = {}
 
 T_error_results_surf_reppnp = {}
 R_error_results_surf_reppnp = {}
 Reproj_error_results_surf_reppnp = {}
 NumberOutliers_results_surf_reppnp = {}
+ProcTime_results_surf_reppnp = {}
 
 #initializing matlab engine
 eng = matlab.engine.start_matlab()
@@ -81,29 +81,32 @@ for testImage_path in testImages_paths:
 
     #################################### Extracting SIFT descriptors ####################################
 
+    start_time_matching_descriptors = time.time() #timinig
+
     (kpsTest, descsTest) = sift.detectAndCompute(test_image, None)
     test2Dpoints = np.array(Utils.get_2dpts_from_kps(kpsTest))
 
-    #allmatches = flann.knnMatch(descsTest,Sift_descsTrain,k=1)
-    #allmatches = sorted(allmatches, key = lambda x:x[0].distance)
-
-    allmatches = bf.match(descsTest, Sift_descsTrain)
-    allmatches = sorted(allmatches, key = lambda x:x.distance)
+    allmatches = flann.knnMatch(descsTest,Sift_descsTrain,k=2)
+    allmatches_filtered = Utils.filter_matches_lowe_distance(allmatches, 0.7)
+    allmatches_filtered = sorted(allmatches_filtered, key = lambda x:x.distance)
 
     #Initializing dictionary to store results
     T_error_results_sift_reppnp[fileName] = {}
     R_error_results_sift_reppnp[fileName] = {}
     Reproj_error_results_sift_reppnp[fileName] = {}
     NumberOutliers_results_sift_reppnp[fileName] = {}
+    ProcTime_results_sift_reppnp[fileName] = {}
 
-    for nmatches in number_of_matches:        
-        matches = allmatches[:nmatches]
+    matching_descriptors_time = time.time() - start_time_matching_descriptors  #timinig
 
-        #matched_train_indexes = [matches[i][0].trainIdx for i in range(len(matches))]
+    for nmatches in number_of_matches:    
+        start_time_pnp_estimation = time.time() #timinig
+    
+        matches = allmatches_filtered[:nmatches]
+
         matched_train_indexes = [matches[i].trainIdx for i in range(len(matches))]
         matched_train_3Dpoints = np.take(Sift_train3Dpts,matched_train_indexes,0)
 
-        #matched_test_indexes = [matches[i][0].queryIdx for i in range(len(matches))]
         matched_test_indexes = [matches[i].queryIdx for i in range(len(matches))]
         matched_test_2Dpoints = np.take(test2Dpoints,matched_test_indexes,0)
 
@@ -111,37 +114,44 @@ for testImage_path in testImages_paths:
 
         R, T, mask = REPPnPMatlab.REPPnP_matlab(matched_train_3Dpoints, matched_test_2Dpoints, K_test, eng)
         
+        pnp_estimation_time = time.time() - start_time_pnp_estimation #timinig
+
         #Storing results
         R_error_results_sift_reppnp[fileName][nmatches] = Utils.get_Rotational_error(RT_dict_gt[fileName][0:3,0:3],R)
         T_error_results_sift_reppnp[fileName][nmatches] = Utils.get_Tranlation_error(RT_dict_gt[fileName][:,3],T)
         Reproj_error_results_sift_reppnp[fileName][nmatches] = Utils.get_Reprojection_error(K_gt, RT_dict_gt[fileName], K_test, np.column_stack([R,T]), Control3DPoints)
         NumberOutliers_results_sift_reppnp[fileName][nmatches] = len(mask[mask==0])
+        ProcTime_results_sift_reppnp[fileName][nmatches] = matching_descriptors_time + pnp_estimation_time
 
     #################################### Extracting SURF descriptors ####################################
+
+    start_time_matching_descriptors = time.time() #timinig
 
     (kpsTest, descsTest) = surf.detectAndCompute(test_image, None)
     test2Dpoints = np.array(Utils.get_2dpts_from_kps(kpsTest))
 
-    #allmatches = flann.knnMatch(descsTest,Surf_descsTrain,k=1)
-    #allmatches = sorted(allmatches, key = lambda x:x[0].distance)
-
-    allmatches = bf.match(descsTest, Surf_descsTrain)
-    allmatches = sorted(allmatches, key = lambda x:x.distance)
+    allmatches = flann.knnMatch(descsTest,Surf_descsTrain,k=2)
+    allmatches_filtered = Utils.filter_matches_lowe_distance(allmatches, 0.7)
+    allmatches_filtered = sorted(allmatches_filtered, key = lambda x:x.distance)
 
     #Initializing dictionary to store results
     T_error_results_surf_reppnp[fileName] = {}
     R_error_results_surf_reppnp[fileName] = {}
     Reproj_error_results_surf_reppnp[fileName] = {}
     NumberOutliers_results_surf_reppnp[fileName] = {}
+    ProcTime_results_surf_reppnp[fileName] = {}
 
-    for nmatches in number_of_matches:        
-        matches = allmatches[:nmatches]
+    matching_descriptors_time = time.time() - start_time_matching_descriptors  #timinig
 
-        #matched_train_indexes = [matches[i][0].trainIdx for i in range(len(matches))]
+    for nmatches in number_of_matches:     
+
+        start_time_pnp_estimation = time.time() #timinig
+   
+        matches = allmatches_filtered[:nmatches]
+
         matched_train_indexes = [matches[i].trainIdx for i in range(len(matches))]
         matched_train_3Dpoints = np.take(Surf_train3Dpts,matched_train_indexes,0)
 
-        #matched_test_indexes = [matches[i][0].queryIdx for i in range(len(matches))]
         matched_test_indexes = [matches[i].queryIdx for i in range(len(matches))]
         matched_test_2Dpoints = np.take(test2Dpoints,matched_test_indexes,0)
 
@@ -149,25 +159,31 @@ for testImage_path in testImages_paths:
 
         R, T, mask = REPPnPMatlab.REPPnP_matlab(matched_train_3Dpoints, matched_test_2Dpoints, K_test, eng)
         
+        pnp_estimation_time = time.time() - start_time_pnp_estimation #timinig
+
         #Storing results
         R_error_results_surf_reppnp[fileName][nmatches] = Utils.get_Rotational_error(RT_dict_gt[fileName][0:3,0:3],R)
         T_error_results_surf_reppnp[fileName][nmatches] = Utils.get_Tranlation_error(RT_dict_gt[fileName][:,3],T)
         Reproj_error_results_surf_reppnp[fileName][nmatches] = Utils.get_Reprojection_error(K_gt, RT_dict_gt[fileName], K_test, np.column_stack([R,T]), Control3DPoints)
         NumberOutliers_results_surf_reppnp[fileName][nmatches] = len(mask[mask==0])
+        ProcTime_results_surf_reppnp[fileName][nmatches] = matching_descriptors_time + pnp_estimation_time
 
 eng.quit()
 
 #Saving SIFT-REPPnP results
-pd.DataFrame.from_dict(R_error_results_sift_reppnp).to_csv("Experiments/Experiment1/Results/results_sift_reppnp_R_error.csv", index = True, header=True) 
-pd.DataFrame.from_dict(T_error_results_sift_reppnp).to_csv("Experiments/Experiment1/Results/results_sift_reppnp_T_error.csv", index = True, header=True) 
-pd.DataFrame.from_dict(Reproj_error_results_sift_reppnp).to_csv("Experiments/Experiment1/Results/results_sift_reppnp_Reproj_error.csv", index = True, header=True) 
-pd.DataFrame.from_dict(NumberOutliers_results_sift_reppnp).to_csv("Experiments/Experiment1/Results/results_sift_reppnp_NumOutliers.csv", index = True, header=True) 
+pd.DataFrame.from_dict(R_error_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Results/results_R_error_sift_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(T_error_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Results/results_T_error_sift_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(Reproj_error_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Results/results_Reproj_error_sift_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(NumberOutliers_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Results/results_NumOutliers_sift_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(ProcTime_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Results/results_ProcTime_sift_reppnp.csv", index = True, header=True) 
+
 
 #Saving SURF-REPPnP results
-pd.DataFrame.from_dict(R_error_results_surf_reppnp).to_csv("Experiments/Experiment1/Results/results_surf_reppnp_R_error.csv", index = True, header=True) 
-pd.DataFrame.from_dict(T_error_results_surf_reppnp).to_csv("Experiments/Experiment1/Results/results_surf_reppnp_T_error.csv", index = True, header=True) 
-pd.DataFrame.from_dict(Reproj_error_results_surf_reppnp).to_csv("Experiments/Experiment1/Results/results_surf_reppnp_Reproj_error.csv", index = True, header=True) 
-pd.DataFrame.from_dict(NumberOutliers_results_surf_reppnp).to_csv("Experiments/Experiment1/Results/results_surf_reppnp_NumOutliers.csv", index = True, header=True) 
+pd.DataFrame.from_dict(R_error_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Results/results_R_error_surf_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(T_error_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Results/results_T_error_surf_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(Reproj_error_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Results/results_Reproj_error_surf_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(NumberOutliers_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Results/results_NumOutliers_surf_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(ProcTime_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Results/results_ProcTime_surf_reppnp.csv", index = True, header=True) 
 
 # #Loading test image
 # image = cv2.imread("../ImagesDataSet/SyntheticTestImages/10.png")
