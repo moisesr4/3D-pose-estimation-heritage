@@ -36,8 +36,8 @@ K_test = TestCameraParameters.Virtual_cameras_intrinsic_parameters
 Control3DPoints = ControlPoints.Control_Points.Control_Points_3D[:12]
 
 #Creating descriptors and matching objects
-sift = cv2.xfeatures2d.SIFT_create()
-surf = cv2.xfeatures2d.SURF_create()
+sift = cv2.xfeatures2d.SIFT_create(2000)
+surf = cv2.xfeatures2d.SURF_create(400) #Hessian threshold to get 2000 kpts (same as sift)
 
 #FLANN matching
 FLANN_INDEX_KDTREE = 1
@@ -171,19 +171,19 @@ for testImage_path in testImages_paths:
 eng.quit()
 
 #Saving SIFT-REPPnP results
-pd.DataFrame.from_dict(R_error_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Results/results_R_error_sift_reppnp.csv", index = True, header=True) 
-pd.DataFrame.from_dict(T_error_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Results/results_T_error_sift_reppnp.csv", index = True, header=True) 
-pd.DataFrame.from_dict(Reproj_error_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Results/results_Reproj_error_sift_reppnp.csv", index = True, header=True) 
-pd.DataFrame.from_dict(NumberOutliers_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Results/results_NumOutliers_sift_reppnp.csv", index = True, header=True) 
-pd.DataFrame.from_dict(ProcTime_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Results/results_ProcTime_sift_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(R_error_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Outputs/results_R_error_sift_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(T_error_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Outputs/results_T_error_sift_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(Reproj_error_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Outputs/results_Reproj_error_sift_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(NumberOutliers_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Outputs/results_NumOutliers_sift_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(ProcTime_results_sift_reppnp).T.to_csv("Experiments/Experiment1/Outputs/results_ProcTime_sift_reppnp.csv", index = True, header=True) 
 
 
 #Saving SURF-REPPnP results
-pd.DataFrame.from_dict(R_error_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Results/results_R_error_surf_reppnp.csv", index = True, header=True) 
-pd.DataFrame.from_dict(T_error_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Results/results_T_error_surf_reppnp.csv", index = True, header=True) 
-pd.DataFrame.from_dict(Reproj_error_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Results/results_Reproj_error_surf_reppnp.csv", index = True, header=True) 
-pd.DataFrame.from_dict(NumberOutliers_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Results/results_NumOutliers_surf_reppnp.csv", index = True, header=True) 
-pd.DataFrame.from_dict(ProcTime_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Results/results_ProcTime_surf_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(R_error_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Outputs/results_R_error_surf_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(T_error_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Outputs/results_T_error_surf_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(Reproj_error_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Outputs/results_Reproj_error_surf_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(NumberOutliers_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Outputs/results_NumOutliers_surf_reppnp.csv", index = True, header=True) 
+pd.DataFrame.from_dict(ProcTime_results_surf_reppnp).T.to_csv("Experiments/Experiment1/Outputs/results_ProcTime_surf_reppnp.csv", index = True, header=True) 
 
 # #Loading test image
 # image = cv2.imread("../ImagesDataSet/SyntheticTestImages/10.png")
