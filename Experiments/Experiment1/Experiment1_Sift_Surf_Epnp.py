@@ -181,26 +181,3 @@ pd.DataFrame.from_dict(T_error_results_surf_epnp_ransac).T.to_csv("Experiments/E
 pd.DataFrame.from_dict(Reproj_error_results_surf_epnp_ransac).T.to_csv("Experiments/Experiment1/Outputs/results_Reproj_error_surf_epnp_ransac.csv", index = True, header=True) 
 pd.DataFrame.from_dict(NumberOutliers_results_surf_epnp_ransac).T.to_csv("Experiments/Experiment1/Outputs/results_NumOutliers_surf_epnp_ransac.csv", index = True, header=True) 
 pd.DataFrame.from_dict(ProcTime_results_surf_epnp_ransac).T.to_csv("Experiments/Experiment1/Outputs/results_ProcTime_surf_epnp_ransac.csv", index = True, header=True) 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
