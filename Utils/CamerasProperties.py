@@ -20,6 +20,16 @@ class TrainingCameraParameters:
 
 class TestCameraParameters:
 
+    RealCameraModel = "LG-H815 (4.42 mm)"
+
+    Real_camera_intrinsic_parameters = np.array([[4110.0998, 0.0000, 2680.0365],
+                                                 [0.0000, 4116.4570, 1492.5679],
+                                                 [0.0000, 0.0000, 1.0000]])
+    
+    Real_camera_distortion_coefficients = np.array([0.33468, -2.07661, 0, 0, 3.99466])
+
+    VirtualCameraModel = "Blender virtual camera"
+
     Virtual_cameras_intrinsic_parameters = np.array([[1452.5000,    0.0000, 664.0000],
                                                      [0.0000, 1452.5000, 373.5000],
                                                      [0.0000,    0.0000,   1.0000]])

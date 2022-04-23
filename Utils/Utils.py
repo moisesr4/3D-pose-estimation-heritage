@@ -3,23 +3,33 @@ import matplotlib.pyplot as plt
 import numpy as np
 import copyreg
 import csv
+import ControlPoints
+from scipy.spatial.transform import Rotation
 
 #OpenCV methods
 def get_Tranlation_error(Tref,T):
-    return np.linalg.norm(Tref - T)
+    return (np.linalg.norm(Tref - T)/np.linalg.norm(T))*100
 
 def get_Rotational_error(Rref, R):
-    error_mat = Rref @ R.T * -1
-    diff_rotation_vector = np.zeros(shape=3)
-    cv2.Rodrigues(error_mat, diff_rotation_vector)
-    return np.linalg.norm(diff_rotation_vector)
+    Qref = Rotation.from_matrix(Rref).as_quat()
+    Q = Rotation.from_matrix(R).as_quat()
+    return (np.linalg.norm(Qref - Q)/np.linalg.norm(Q))*100
+    # error_mat = Rref @ R.T * -1
+    # diff_rotation_vector = np.zeros(shape=3)
+    # cv2.Rodrigues(error_mat, diff_rotation_vector)
+    # return np.linalg.norm(diff_rotation_vector)/3
 
 def get_Reprojection_error(Kref, RTref, K, RT, CtrPts3D):
     Points2Dref = [project_3d_point_to_2d_pixel(CtrPts3D[i], Kref, RTref) for i in range(len(CtrPts3D))]
     Points2D = [project_3d_point_to_2d_pixel(CtrPts3D[i], K, RT) for i in range(len(CtrPts3D))]
     diff_Points2d = np.subtract(Points2Dref, Points2D)
     norm_diff_Points2d = [np.linalg.norm(diff_Points2d[i]) for i in range(len(diff_Points2d))]
-    return max(norm_diff_Points2d)
+    return max(norm_diff_Points2d)/2
+
+def get_NumOutliers_from_Inliers(matches, inliers):
+    if inliers is not None:
+        return len(matches) - len(inliers)
+    return len(matches)
 
 
 def show_image(image):
@@ -166,3 +176,36 @@ def write_dictionary_to_csv(path_to_write, dict):
         w = csv.DictWriter(f, dict.keys())
         w.writeheader()
         w.writerow(dict)
+
+def filter_matches_lowe_distance(matches, ratio_thresh):
+    goodMatches = []
+    for match in matches:
+        if match[0].distance < ratio_thresh * match[1].distance :
+            goodMatches.append(match[0])
+    return goodMatches
+
+def EPnP_Ransac(matched_train_3Dpoints, matched_test_2Dpoints, K_test):
+    _, rvecs, tvecs, inliers = cv2.solvePnPRansac(
+    matched_train_3Dpoints, 
+    np.ascontiguousarray(matched_test_2Dpoints[:,:2]).reshape((-1,1,2)),
+    K_test, 
+    None, None, None, False, 
+    200, 4, 0.99,
+    cv2.SOLVEPNP_EPNP)
+
+    # Computing rotation matrix
+    rotation_matrix = np.zeros(shape=(3,3))
+    cv2.Rodrigues(rvecs, rotation_matrix)
+
+    return rotation_matrix, tvecs, inliers
+
+def Project_skeleton_on_image(img, K, R, T):
+    # Computing rotation matrix
+    RT = np.column_stack([R,T])
+    #Visualizing result
+    ReferencePoints = ControlPoints.Control_Points
+    Points3D = ReferencePoints.Control_Points_3D
+    Points2D = [project_3d_point_to_2d_pixel(Points3D[i],K,RT) for i in range(len(Points3D))]
+
+    projected_image = draw_skeleton_object_from_points_array(img, Points2D,5)
+    return projected_image
