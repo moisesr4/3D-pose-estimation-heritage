@@ -6,3 +6,5 @@ Python 3.7.10
 - pandas                    1.3.3
 - numpy                     1.20.2
 - matlabengineforpython     R2021b
+
+3D model: https://skfb.ly/o9PXr
